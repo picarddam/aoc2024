@@ -37,15 +37,19 @@ pub fn solve_part1(input: &(Vec<u64>, Vec<u64>)) -> u64 {
 
 #[aoc(day1, part2)]
 pub fn solve_part2(input: &(Vec<u64>, Vec<u64>)) -> u64 {
-    let freqmap: HashMap<u64, u64> = input.1.iter().fold(HashMap::new(), |mut map, elem| {
-        *map.entry(*elem).or_default() += 1;
-        map
-    });
+    let freqmap = frequencies(&input.1);
     input
         .0
         .iter()
         .filter_map(|e| freqmap.get(e).map(|count| e * count))
         .sum()
+}
+
+fn frequencies(data: &[u64]) -> HashMap<u64, u64> {
+    data.iter().fold(HashMap::new(), |mut map, elem| {
+        *map.entry(*elem).or_default() += 1;
+        map
+    })
 }
 
 #[cfg(test)]
