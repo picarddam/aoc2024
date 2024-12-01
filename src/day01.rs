@@ -1,4 +1,4 @@
-use std::collections::BTreeMap;
+use std::collections::HashMap;
 
 use aoc_runner_derive::{aoc, aoc_generator};
 use nom::{
@@ -37,7 +37,7 @@ pub fn solve_part1(input: &(Vec<u64>, Vec<u64>)) -> u64 {
 
 #[aoc(day1, part2)]
 pub fn solve_part2(input: &(Vec<u64>, Vec<u64>)) -> u64 {
-    let freqmap: BTreeMap<u64, u64> = input.1.iter().fold(BTreeMap::new(), |mut map, elem| {
+    let freqmap: HashMap<u64, u64> = input.1.iter().fold(HashMap::new(), |mut map, elem| {
         *map.entry(*elem).or_default() += 1;
         map
     });
