@@ -46,10 +46,11 @@ pub fn solve_part2(input: &(Vec<u64>, Vec<u64>)) -> u64 {
 }
 
 fn frequencies(data: &[u64]) -> HashMap<u64, u64> {
-    data.iter().fold(HashMap::new(), |mut map, elem| {
-        *map.entry(*elem).or_default() += 1;
-        map
-    })
+    data.iter()
+        .fold(HashMap::with_capacity(data.len()), |mut map, elem| {
+            *map.entry(*elem).or_default() += 1;
+            map
+        })
 }
 
 #[cfg(test)]
