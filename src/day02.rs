@@ -42,7 +42,7 @@ fn problems(line: &[u64]) -> u64 {
             Ordering::Equal => (),
             Ordering::Greater => dec += 1,
         };
-        if !(1 <= diff && diff <= 3) {
+        if !(1..=3).contains(&diff) {
             outrange += 1
         }
     }
@@ -54,17 +54,40 @@ fn is_safe_dampened(input: &[u64]) -> bool {
 }
 
 fn is_safe_without(input: &[u64], idx: usize) -> bool {
-    let shortened: Vec<u64> = input
-        .iter()
-        .enumerate()
-        .filter_map(|(i, e)| if i == idx { None } else { Some(*e) })
-        .collect();
-    is_safe(&shortened)
+    let o = ordering(input);
+    let skip = if idx == 0 || idx == input.len() - 1 {
+        true
+    } else {
+        let l = input[idx - 1];
+        let r = input[idx + 1];
+        let d = l.abs_diff(r);
+        l.cmp(&r) == o && (1..=3).contains(&d)
+    };
+    let l = &input[0..idx];
+    let r = &input[idx + 1..];
+    let safe_l = l.len() < 2 || (is_safe(l) && ordering(l) == o);
+    let safe_r = r.len() < 2 || (is_safe(r) && ordering(r) == o);
+    skip && safe_l && safe_r
+}
+
+fn ordering(input: &[u64]) -> Ordering {
+    let mut ge = 0;
+    let mut le = 0;
+    input.windows(2).for_each(|e| match e[0].cmp(&e[1]) {
+        Ordering::Less => le += 1,
+        Ordering::Equal => (),
+        Ordering::Greater => ge += 1,
+    });
+    ge.cmp(&le)
 }
 
 #[aoc(day2, part2)]
 pub fn solve_part2(input: &[Vec<u64>]) -> u64 {
-    input.iter().filter(|line| is_safe_dampened(line)).count() as u64
+    input
+        .iter()
+        .filter(|line| is_safe_dampened(line))
+        .cloned()
+        .count() as u64
 }
 
 #[cfg(test)]
