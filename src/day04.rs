@@ -29,16 +29,14 @@ fn bfr_filter(bfr: &ArrayView1<u8>) -> bool {
 fn count_lines(grid: &ArrayView2<u8>) -> usize {
     grid.windows((1, 4))
         .into_iter()
-        .map(|arr| bfr_filter(&arr.flatten().view()))
-        .filter(|x| *x)
+        .filter(|arr| bfr_filter(&arr.flatten().view()))
         .count()
 }
 
 fn count_columns(grid: &ArrayView2<u8>) -> usize {
     grid.windows((4, 1))
         .into_iter()
-        .map(|arr| bfr_filter(&arr.flatten().view()))
-        .filter(|x| *x)
+        .filter(|arr| bfr_filter(&arr.flatten().view()))
         .count()
 }
 
