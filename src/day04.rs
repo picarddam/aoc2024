@@ -66,9 +66,27 @@ pub fn solve_part1(input: &Puzzle) -> usize {
     check_xmas_grid(&input.view())
 }
 
+fn find_xmas(grid: &ArrayView2<u8>) -> usize {
+    grid.windows((3, 3))
+        .into_iter()
+        .filter(|grid| {
+            let mut bfr = [0u8; 3];
+            for i in 0..bfr.len() {
+                bfr[i] = grid[[i, i]];
+            }
+            let diag1 = bfr == "MAS".as_bytes() || bfr == "SAM".as_bytes();
+            for i in 0..bfr.len() {
+                bfr[i] = grid[[bfr.len() - 1 - i, i]];
+            }
+            let diag2 = bfr == "MAS".as_bytes() || bfr == "SAM".as_bytes();
+            diag1 && diag2
+        })
+        .count()
+}
+
 #[aoc(day4, part2)]
-pub fn solve_part2(input: &Puzzle) -> u64 {
-    0
+pub fn solve_part2(input: &Puzzle) -> usize {
+    find_xmas(&input.view())
 }
 
 #[cfg(test)]
@@ -117,6 +135,16 @@ SXSXS"#;
 ..A.
 .M..
 X..."#;
+
+    const TEST3X3: &str = r#"M.S
+.A.
+M.S"#;
+    const TEST3X5: &str = r#"M.S
+.A.
+M.S
+.A.
+M.S"#;
+
     #[test_case(TEST => 18)]
     #[test_case(TEST4X4 => 6)]
     #[test_case(TEST7X4 => 12)]
@@ -152,8 +180,10 @@ X..."#;
         count_diagonals(&grid.view())
     }
 
-    // #[test_case(TEST => 48)]
-    // fn part2(input: &str) -> u64 {
-    //     solve_part2(&input_generator(input))
-    // }
+    #[test_case(TEST => 9)]
+    #[test_case(TEST3X3 => 1)]
+    #[test_case(TEST3X5 => 2)]
+    fn part2(input: &str) -> usize {
+        solve_part2(&input_generator(input))
+    }
 }
