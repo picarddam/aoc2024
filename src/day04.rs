@@ -1,5 +1,5 @@
 use aoc_runner_derive::{aoc, aoc_generator};
-use ndarray::{array, Array1, Array2, ArrayView1, ArrayView2};
+use ndarray::{Array2, ArrayView1, ArrayView2};
 
 type Puzzle = Array2<u8>;
 
@@ -17,9 +17,10 @@ pub fn input_generator(input: &str) -> Puzzle {
 }
 
 fn bfr_filter(bfr: &ArrayView1<u8>) -> bool {
-    let xmas: Array1<u8> = array![88, 77, 65, 83];
-    let samx: Array1<u8> = array![83, 65, 77, 88];
-    bfr == xmas || bfr == samx
+    const XMAS: [u8; 4] = [88, 77, 65, 83];
+    let xmas = XMAS.iter().zip(bfr.iter()).all(|(a, b)| a == b);
+    let samx = XMAS.iter().rev().zip(bfr.iter()).all(|(a, b)| a == b);
+    xmas || samx
 }
 
 fn count_lines(grid: &ArrayView2<u8>) -> usize {
