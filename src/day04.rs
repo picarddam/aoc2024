@@ -16,11 +16,14 @@ pub fn input_generator(input: &str) -> Puzzle {
     .unwrap()
 }
 
+const XMAS: u64 = 0x584d4153;
+const SAMX: u64 = 0x53414d58;
+const MAS: u64 = 0x004d4153;
+const SAM: u64 = 0x0053414d;
+
 fn bfr_filter(bfr: &ArrayView1<u8>) -> bool {
-    const XMAS: [u8; 4] = [88, 77, 65, 83];
-    let xmas = XMAS.iter().zip(bfr.iter()).all(|(a, b)| a == b);
-    let samx = XMAS.iter().rev().zip(bfr.iter()).all(|(a, b)| a == b);
-    xmas || samx
+    let v: u64 = bfr.iter().fold(0, |acc, elem| acc << 8 | *elem as u64);
+    v == XMAS || v == SAMX
 }
 
 fn count_lines(grid: &ArrayView2<u8>) -> usize {
@@ -43,15 +46,10 @@ fn count_diagonals(grid: &ArrayView2<u8>) -> usize {
     grid.windows((4, 4))
         .into_iter()
         .map(|grid| {
-            let mut bfr = [0u8; 4];
-            for i in 0..bfr.len() {
-                bfr[i] = grid[[i, i]];
-            }
-            let diag1 = bfr == "XMAS".as_bytes() || bfr == "SAMX".as_bytes();
-            for i in 0..bfr.len() {
-                bfr[i] = grid[[i, bfr.len() - 1 - i]];
-            }
-            let diag2 = bfr == "XMAS".as_bytes() || bfr == "SAMX".as_bytes();
+            let d1 = (0..4).fold(0, |acc, i| acc << 8 | grid[[i, i]] as u64);
+            let diag1 = d1 == XMAS || d1 == SAMX;
+            let d2 = (0..4).fold(0, |acc, i| acc << 8 | grid[[i, 3 - i]] as u64);
+            let diag2 = d2 == XMAS || d2 == SAMX;
             diag1 as usize + diag2 as usize
         })
         .sum()
@@ -70,15 +68,10 @@ fn find_xmas(grid: &ArrayView2<u8>) -> usize {
     grid.windows((3, 3))
         .into_iter()
         .filter(|grid| {
-            let mut bfr = [0u8; 3];
-            for i in 0..bfr.len() {
-                bfr[i] = grid[[i, i]];
-            }
-            let diag1 = bfr == "MAS".as_bytes() || bfr == "SAM".as_bytes();
-            for i in 0..bfr.len() {
-                bfr[i] = grid[[bfr.len() - 1 - i, i]];
-            }
-            let diag2 = bfr == "MAS".as_bytes() || bfr == "SAM".as_bytes();
+            let d1 = (0..3).fold(0, |acc, i| acc << 8 | grid[[i, i]] as u64);
+            let diag1 = d1 == MAS || d1 == SAM;
+            let d2 = (0..3).fold(0, |acc, i| acc << 8 | grid[[i, 2 - i]] as u64);
+            let diag2 = d2 == MAS || d2 == SAM;
             diag1 && diag2
         })
         .count()
