@@ -1,3 +1,4 @@
+use std::cmp::Ordering;
 use std::collections::{HashMap, HashSet};
 
 use aoc_runner_derive::{aoc, aoc_generator};
@@ -72,10 +73,29 @@ fn is_valid_line(line: &[u64], rules: &HashMap<u64, HashSet<u64>>) -> bool {
     })
 }
 
-// #[aoc(day5, part2)]
-// pub fn solve_part2(input: &Puzzle) -> usize {
-//     todo!()
-// }
+#[aoc(day5, part2)]
+pub fn solve_part2(input: &Puzzle) -> u64 {
+    let rules = rulemap(&input.ruleset);
+    let mut invalid: Vec<Vec<u64>> = input
+        .print_queue
+        .iter()
+        .filter(|line| !is_valid_line(line, &rules))
+        .cloned()
+        .collect();
+    invalid.iter_mut().for_each(|line| {
+        line.sort_by(|a, b| match rules.get(a) {
+            Some(allowed) => {
+                if allowed.contains(b) {
+                    Ordering::Greater
+                } else {
+                    Ordering::Less
+                }
+            }
+            None => Ordering::Less,
+        })
+    });
+    invalid.iter().map(|l| l[l.len() / 2]).sum()
+}
 
 #[cfg(test)]
 mod tests {
@@ -116,8 +136,8 @@ mod tests {
         solve_part1(&input_generator(input))
     }
 
-    // #[test_case(TEST => 9)]
-    // fn part2(input: &str) -> usize {
-    //     solve_part2(&input_generator(input))
-    // }
+    #[test_case(TEST => 123)]
+    fn part2(input: &str) -> u64 {
+        solve_part2(&input_generator(input))
+    }
 }
