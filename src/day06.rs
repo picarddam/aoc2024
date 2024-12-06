@@ -142,6 +142,7 @@ fn find_obstacles(input: &Puzzle) -> HashSet<Position> {
     path.iter()
         .filter(|&(p, m)| is_loop(input, init, *p + *m))
         .map(|&(p, m)| p + m)
+        .filter(|p| *p != init)
         .collect::<HashSet<_>>()
 }
 
@@ -183,5 +184,20 @@ mod tests {
                 .collect::<Vec<_>>(),
             []
         )
+    }
+
+    #[test]
+    fn check_not_starting() {
+        let input = include_str!("../input/2024/day6.txt");
+        let puzzle = input_generator(input);
+        let guard = puzzle
+            .positions()
+            .filter(|&(_, t)| *t == Tile::Guard)
+            .map(|(p, _)| p)
+            .next()
+            .expect("Failed to find guard");
+        let potentials = find_obstacles(&puzzle);
+        assert!(!potentials.contains(&guard));
+        assert_eq!(potentials.len(), 2022);
     }
 }
