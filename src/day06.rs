@@ -7,6 +7,7 @@ use nom::character::complete::newline;
 use nom::combinator::map;
 use nom::multi::{many1, separated_list1};
 use nom::IResult;
+use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
 use utils::grid::Grid;
 use utils::movement::{Movement, CLOCKWISE, DOWN, LEFT, RIGHT, UP};
 use utils::position::Position;
@@ -139,7 +140,7 @@ fn rotate(m: Movement) -> Movement {
 fn find_obstacles(input: &Puzzle) -> HashSet<Position> {
     let path = get_visited(input);
     let init = path[0].0;
-    path.iter()
+    path.par_iter()
         .filter(|&(p, m)| is_loop(input, init, *p + *m))
         .map(|&(p, m)| p + m)
         .filter(|p| *p != init)
