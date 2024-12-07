@@ -6,6 +6,7 @@ use nom::{
     sequence::separated_pair,
     IResult,
 };
+use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
 
 type Puzzle = Vec<(u64, Vec<u64>)>;
 
@@ -35,7 +36,7 @@ fn valid_equation(result: u64, numbers: &[u64]) -> bool {
 #[aoc(day7, part1)]
 pub fn solve_part1(input: &Puzzle) -> u64 {
     input
-        .iter()
+        .par_iter()
         .filter(|&(k, v)| valid_equation(*k, v))
         .map(|(k, _v)| k)
         .sum()
@@ -57,7 +58,7 @@ fn valid_equation_concat(result: u64, numbers: &[u64]) -> bool {
 #[aoc(day7, part2)]
 pub fn solve_part2(input: &Puzzle) -> u64 {
     input
-        .iter()
+        .par_iter()
         .filter(|&(k, v)| valid_equation_concat(*k, v))
         .map(|(k, _v)| k)
         .sum()
