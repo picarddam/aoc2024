@@ -24,13 +24,10 @@ pub fn input_generator(input: &str) -> Puzzle {
 fn valid_equation(result: u64, numbers: &[u64]) -> bool {
     match numbers {
         [] => false,
-        [last] => *last == result || result % last == 0 && result / last == 1,
+        [last] => *last == result,
         [head @ .., tail] => {
-            if *tail > result {
-                return false;
-            }
             result % tail == 0 && valid_equation(result / tail, head)
-                || valid_equation(result - tail, head)
+                || result > *tail && valid_equation(result - tail, head)
         }
     }
 }
