@@ -44,17 +44,15 @@ pub fn solve_part1(input: &Puzzle) -> u64 {
         .sum()
 }
 
-fn concat(l: u64, r: u64) -> u64 {
-    l * 10u64.pow(r.ilog10() + 1) + r
-}
-
-fn valid_equation_concat(result: u64, numbers: &[u64], bfr: u64) -> bool {
+fn valid_equation_concat(result: u64, numbers: &[u64]) -> bool {
     match numbers {
-        [] => result == bfr,
-        [head, tail @ ..] => {
-            valid_equation_concat(result, tail, bfr + head)
-                || valid_equation_concat(result, tail, concat(bfr, *head))
-                || valid_equation_concat(result, tail, bfr * head)
+        [] => unreachable!(),
+        [last] => *last == result,
+        [head @ .., last] => {
+            let m = 10u64.pow(last.ilog10() + 1);
+            result % last == 0 && valid_equation_concat(result / last, head)
+                || result > *last && valid_equation_concat(result - last, head)
+                || result % m == *last && valid_equation_concat(result / m, head)
         }
     }
 }
@@ -63,7 +61,7 @@ fn valid_equation_concat(result: u64, numbers: &[u64], bfr: u64) -> bool {
 pub fn solve_part2(input: &Puzzle) -> u64 {
     input
         .iter()
-        .filter(|&(k, v)| valid_equation_concat(*k, v, 0))
+        .filter(|&(k, v)| valid_equation_concat(*k, v))
         .map(|(k, _v)| k)
         .sum()
 }
@@ -129,7 +127,7 @@ mod tests {
         let puzzle = input_generator(input);
         puzzle
             .first()
-            .map(|(k, v)| valid_equation_concat(*k, v, 0))
+            .map(|(k, v)| valid_equation_concat(*k, v))
             .unwrap_or_default()
     }
 }
