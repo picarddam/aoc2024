@@ -21,11 +21,16 @@ pub fn input_generator(input: &str) -> Puzzle {
     puzzle(input).unwrap().1
 }
 
-fn valid_equation(result: u64, numbers: &[u64], acc: u64) -> bool {
+fn valid_equation(result: u64, numbers: &[u64]) -> bool {
     match numbers {
-        [] => result == acc,
-        [curr, tail @ ..] => {
-            valid_equation(result, tail, acc + curr) || valid_equation(result, tail, acc * curr)
+        [] => false,
+        [last] => *last == result || result % last == 0 && result / last == 1,
+        [head @ .., tail] => {
+            if *tail > result {
+                return false;
+            }
+            result % tail == 0 && valid_equation(result / tail, head)
+                || valid_equation(result - tail, head)
         }
     }
 }
@@ -34,7 +39,7 @@ fn valid_equation(result: u64, numbers: &[u64], acc: u64) -> bool {
 pub fn solve_part1(input: &Puzzle) -> u64 {
     input
         .iter()
-        .filter(|&(k, v)| valid_equation(*k, v, 0))
+        .filter(|&(k, v)| valid_equation(*k, v))
         .map(|(k, _v)| k)
         .sum()
 }
@@ -77,7 +82,7 @@ mod tests {
         let puzzle = input_generator(input);
         puzzle
             .first()
-            .map(|(k, v)| valid_equation(*k, v, 0))
+            .map(|(k, v)| valid_equation(*k, v))
             .unwrap_or_default()
     }
 
