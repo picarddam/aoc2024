@@ -61,10 +61,40 @@ pub fn solve_part1(input: &Puzzle) -> usize {
         .len()
 }
 
-// #[aoc(day8, part2)]
-// pub fn solve_part2(input: &Puzzle) -> u64 {
-//     todo!()
-// }
+fn antinode_extended(antenna: Position, other: Position, puzzle: &Puzzle) -> HashSet<Position> {
+    let mut out = HashSet::new();
+    let mut current = antenna;
+    let m = Movement::between(antenna, other).unwrap();
+    while let Some(valid) = current
+        .checked_move(&m)
+        .filter(|&Position { x, y }| x < puzzle.width && y < puzzle.height)
+    {
+        out.insert(valid);
+        current = valid;
+    }
+    out
+}
+
+fn antinodes_extended(antennas: &[Position], puzzle: &Puzzle) -> HashSet<Position> {
+    let mut output = HashSet::new();
+    for (i, &antenna) in antennas.iter().enumerate() {
+        for &other in &antennas[i + 1..] {
+            output.extend(antinode_extended(antenna, other, puzzle).into_iter());
+            output.extend(antinode_extended(other, antenna, puzzle).into_iter());
+        }
+    }
+    output
+}
+
+#[aoc(day8, part2)]
+pub fn solve_part2(input: &Puzzle) -> usize {
+    input
+        .data
+        .iter()
+        .flat_map(|(_, v)| antinodes_extended(v, input))
+        .collect::<HashSet<_>>()
+        .len()
+}
 
 #[cfg(test)]
 mod tests {
@@ -108,6 +138,17 @@ mod tests {
 ..........
 "#;
 
+    const T_TEST: &str = r#"T.........
+...T......
+.T........
+..........
+..........
+..........
+..........
+..........
+..........
+.........."#;
+
     #[test_case(TEST => 14)]
     #[test_case(SIMPLER => 2)]
     #[test_case(THREE => 4)]
@@ -115,8 +156,9 @@ mod tests {
         solve_part1(&input_generator(input))
     }
 
-    // #[test_case(TEST => 11387)]
-    // fn part2(input: &str) -> u64 {
-    //     solve_part2(&input_generator(input))
-    // }
+    #[test_case(TEST => 34)]
+    #[test_case(T_TEST => 9)]
+    fn part2(input: &str) -> usize {
+        solve_part2(&input_generator(input))
+    }
 }
