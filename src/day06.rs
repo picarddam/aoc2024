@@ -71,7 +71,7 @@ fn get_visited(input: &Puzzle) -> Vec<(Position, Movement)> {
     let mut movement = moves.next().unwrap();
     loop {
         visited.push((position, *movement));
-        let next_pos = match position.checked_move(movement) {
+        let next_pos = match position.checked_move(*movement) {
             Some(pos) => pos,
             None => break,
         };
@@ -99,7 +99,7 @@ fn is_loop(grid: &Grid<Tile>, init: Position, block: Position) -> bool {
         return false;
     }
     while !visited.contains(&(curr_pos, curr_move)) {
-        let try_pos = match curr_pos.checked_move(&curr_move) {
+        let try_pos = match curr_pos.checked_move(curr_move) {
             Some(pos) => pos,
             None => return false,
         };

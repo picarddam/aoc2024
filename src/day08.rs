@@ -36,7 +36,7 @@ pub fn input_generator(input: &str) -> Puzzle {
 fn antinode(antenna: Position, other: Position, puzzle: &Puzzle) -> Option<Position> {
     let m = Movement::between(antenna, other)?;
     other
-        .checked_move(&m)
+        .checked_move(m)
         .filter(|&Position { x, y }| x < puzzle.width && y < puzzle.height)
 }
 
@@ -66,7 +66,7 @@ fn antinode_extended(antenna: Position, other: Position, puzzle: &Puzzle) -> Has
     let mut current = antenna;
     let m = Movement::between(antenna, other).unwrap();
     while let Some(valid) = current
-        .checked_move(&m)
+        .checked_move(m)
         .filter(|&Position { x, y }| x < puzzle.width && y < puzzle.height)
     {
         out.insert(valid);
