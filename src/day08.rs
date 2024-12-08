@@ -34,10 +34,7 @@ pub fn input_generator(input: &str) -> Puzzle {
 }
 
 fn antinode(antenna: Position, other: Position, puzzle: &Puzzle) -> Option<Position> {
-    let m = Movement {
-        x: isize::try_from(other.x).ok()? - isize::try_from(antenna.x).ok()?,
-        y: isize::try_from(other.y).ok()? - isize::try_from(antenna.y).ok()?,
-    };
+    let m = Movement::between(antenna, other)?;
     other
         .checked_move(&m)
         .filter(|&Position { x, y }| x < puzzle.width && y < puzzle.height)
