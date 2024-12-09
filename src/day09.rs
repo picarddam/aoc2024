@@ -1,4 +1,7 @@
-use std::iter::repeat;
+use std::{
+    collections::{BTreeMap, BTreeSet},
+    iter::repeat,
+};
 
 use aoc_runner_derive::{aoc, aoc_generator};
 
@@ -42,14 +45,57 @@ pub fn solve_part1(input: &Puzzle) -> usize {
         };
         global_index += v
     }
-    println!();
     sum
 }
 
-// #[aoc(day9, part2)]
-// pub fn solve_part2(input: &Puzzle) -> usize {
-//     todo!()
-// }
+#[aoc(day9, part2)]
+pub fn solve_part2(input: &Puzzle) -> usize {
+    let blocks = input.0.iter().sum();
+    let mut disk: Vec<Option<usize>> = vec![None; blocks];
+    let mut file_index: BTreeMap<usize, (usize, usize)> = BTreeMap::new();
+    let mut free_index: BTreeMap<usize, BTreeSet<usize>> = BTreeMap::new();
+    let mut idx = 0;
+    for (i, v) in input.0.iter().enumerate() {
+        if i % 2 == 0 {
+            let slice = &mut disk[idx..idx + v];
+            slice.fill(Some(i / 2));
+            file_index.insert(i / 2, (idx, *v));
+        } else {
+            free_index.entry(*v).or_default().insert(idx);
+        }
+        idx += v;
+    }
+
+    for (i, (idx, count)) in file_index.into_iter().rev() {
+        if let Some((&free_count, free_idx)) = free_index
+            .iter_mut()
+            // Large enough free blocks on the left of current index.
+            .filter(|(&k, v)| k >= count && v.first().unwrap_or(&idx) < &idx)
+            // The leftmost
+            .min_by(|(k1, v1), (k2, v2)| (v1, k1).cmp(&(v2, k2)))
+            // Pop it from the free blocks
+            .and_then(|(k, v)| Some((k, v.pop_first()?)))
+        {
+            // Swap these
+            let new = &mut disk[free_idx..free_idx + count];
+            new.fill(Some(i));
+            let old = &mut disk[idx..idx + count];
+            old.fill(None);
+            // Index remaining free space
+            if free_count > count {
+                free_index
+                    .entry(free_count - count)
+                    .or_default()
+                    .insert(free_idx + count);
+            }
+        }
+    }
+
+    disk.into_iter()
+        .enumerate()
+        .map(|(i, v)| i * v.unwrap_or_default())
+        .sum()
+}
 
 #[cfg(test)]
 mod tests {
@@ -63,8 +109,8 @@ mod tests {
         solve_part1(&input_generator(input))
     }
 
-    // #[test_case(TEST => 34)]
-    // fn part2(input: &str) -> usize {
-    //     solve_part2(&input_generator(input))
-    // }
+    #[test_case(TEST =>2858)]
+    fn part2(input: &str) -> usize {
+        solve_part2(&input_generator(input))
+    }
 }
