@@ -54,15 +54,12 @@ impl<T> IndexMut<&Position> for Grid<T> {
 
 pub struct PosIter<'a, T> {
     grid: &'a Grid<T>,
-    current: Position,
+    current: usize,
 }
 
 impl<'a, T> PosIter<'a, T> {
     fn new(grid: &'a Grid<T>) -> Self {
-        Self {
-            grid,
-            current: Position { x: 0, y: 0 },
-        }
+        Self { grid, current: 0 }
     }
 }
 
@@ -70,17 +67,15 @@ impl<'a, T> Iterator for PosIter<'a, T> {
     type Item = (Position, &'a T);
 
     fn next(&mut self) -> Option<Self::Item> {
-        let output = self.current;
-        if output.x == self.grid.width && output.y == self.grid.height {
+        if self.current >= self.grid.data.len() {
             return None;
         }
-        if self.current.x == self.grid.width - 1 {
-            self.current.x = 0;
-            self.current.y += 1;
-        } else {
-            self.current.x += 1;
-        }
-        let value = &self.grid[&output];
-        Some((output, value))
+        let position = Position {
+            y: self.current / self.grid.height,
+            x: self.current % self.grid.height,
+        };
+        let value = &self.grid.data[self.current];
+        self.current += 1;
+        Some((position, value))
     }
 }
