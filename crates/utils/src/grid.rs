@@ -1,5 +1,8 @@
-use crate::position::Position;
-use std::ops::{Index, IndexMut};
+use crate::{movement::Movement, position::Position};
+use std::{
+    fmt::Display,
+    ops::{Index, IndexMut},
+};
 
 pub struct Grid<T> {
     pub width: usize,
@@ -35,6 +38,12 @@ impl<T> Grid<T> {
 
     pub fn positions(&self) -> PosIter<'_, T> {
         PosIter::new(self)
+    }
+
+    pub fn checked_move(&self, position: Position, movement: Movement) -> Option<Position> {
+        position
+            .checked_move(movement)
+            .filter(|n| n.x < self.width && n.y < self.height)
     }
 }
 
@@ -77,5 +86,21 @@ impl<'a, T> Iterator for PosIter<'a, T> {
         let value = &self.grid.data[self.current];
         self.current += 1;
         Some((position, value))
+    }
+}
+
+impl<T> Display for Grid<T>
+where
+    T: Display,
+{
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        for y in 0..self.height {
+            let line = &self.data[y * self.width..(y + 1) * self.width];
+            for elem in line {
+                write!(f, "{}", elem)?;
+            }
+            writeln!(f)?;
+        }
+        Ok(())
     }
 }
