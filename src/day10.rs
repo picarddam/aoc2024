@@ -41,17 +41,29 @@ pub fn solve_part1(input: &Puzzle) -> usize {
     let trailheads = input
         .positions()
         .filter(|(_, &h)| h == 0)
-        .map(|(p, h)| (p, *h))
-        .collect::<Vec<(Position, u32)>>();
-    trailheads
+        .map(|(p, h)| (p, *h));
+    trailheads.map(|(p, h)| score_from(p, h, input).len()).sum()
+}
+
+fn count_path(position: Position, elevation: u32, grid: &Grid<u32>) -> usize {
+    if elevation == 9 {
+        return 1;
+    }
+    CLOCKWISE
         .iter()
-        .map(|(p, h)| score_from(*p, *h, input).len())
+        .flat_map(|m| grid.checked_move(position, *m))
+        .filter(|n| grid[n] == elevation + 1)
+        .map(|n| count_path(n, grid[&n], grid))
         .sum()
 }
 
 #[aoc(day10, part2)]
 pub fn solve_part2(input: &Puzzle) -> usize {
-    todo!()
+    let trailheads = input
+        .positions()
+        .filter(|(_, &h)| h == 0)
+        .map(|(p, h)| (p, *h));
+    trailheads.map(|(p, h)| count_path(p, h, input)).sum()
 }
 
 #[cfg(test)]
@@ -120,7 +132,7 @@ mod tests {
         out
     }
 
-    #[test_case(TEST =>2858)]
+    #[test_case(TEST_LARGER =>81)]
     fn part2(input: &str) -> usize {
         solve_part2(&input_generator(input))
     }
