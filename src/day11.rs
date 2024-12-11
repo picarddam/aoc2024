@@ -75,7 +75,7 @@ mod tests {
         solve_part1(&input_generator(input))
     }
 
-    #[test_case(TEST =>81)]
+    #[test_case(TEST => 65601038650482)]
     fn part2(input: &str) -> usize {
         solve_part2(&input_generator(input))
     }
