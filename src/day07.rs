@@ -7,6 +7,7 @@ use nom::{
     IResult,
 };
 use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
+use utils::math::asm_div_rem;
 
 type Puzzle = Vec<(u64, Vec<u64>)>;
 
@@ -27,7 +28,11 @@ fn valid_equation(result: u64, numbers: &[u64]) -> bool {
         [] => false,
         [last] => *last == result,
         [head @ .., tail] => {
-            result % tail == 0 && valid_equation(result / tail, head)
+            let (quotient, remainder) = unsafe {
+                // SAFETY: input does not contain 0, so YOLO
+                asm_div_rem(result, *tail)
+            };
+            remainder == 0 && valid_equation(quotient, head)
                 || result > *tail && valid_equation(result - tail, head)
         }
     }
@@ -47,10 +52,18 @@ fn valid_equation_concat(result: u64, numbers: &[u64]) -> bool {
         [] => unreachable!(),
         [last] => *last == result,
         [head @ .., last] => {
-            let m = 10u64.pow(last.ilog10() + 1);
-            result % last == 0 && valid_equation_concat(result / last, head)
+            let (quotient, remainder) = unsafe {
+                // SAFETY: input does not contain 0, so YOLO
+                asm_div_rem(result, *last)
+            };
+            let split = 10u64.pow(last.ilog10() + 1);
+            let (prefix, suffix) = unsafe {
+                // SAFETY: m is a power of 10 greater or equal to 10^1
+                asm_div_rem(result, split)
+            };
+            remainder == 0 && valid_equation_concat(quotient, head)
                 || result > *last && valid_equation_concat(result - last, head)
-                || result % m == *last && valid_equation_concat(result / m, head)
+                || suffix == *last && valid_equation_concat(prefix, head)
         }
     }
 }
