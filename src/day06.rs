@@ -69,15 +69,8 @@ fn get_visited(input: &Puzzle) -> Vec<(Position, Movement)> {
     let mut visited = Vec::new();
     let mut moves = CLOCKWISE.iter().cycle();
     let mut movement = moves.next().unwrap();
-    loop {
-        visited.push((position, *movement));
-        let next_pos = match position.checked_move(*movement) {
-            Some(pos) => pos,
-            None => break,
-        };
-        if !input.contains(next_pos) {
-            break;
-        };
+    visited.push((position, *movement));
+    while let Some(next_pos) = input.checked_move(position, *movement) {
         let next_tile = input[&next_pos];
         match next_tile {
             Tile::Wall => {
@@ -87,6 +80,7 @@ fn get_visited(input: &Puzzle) -> Vec<(Position, Movement)> {
                 position = position + movement;
             }
         }
+        visited.push((position, *movement));
     }
     visited
 }
