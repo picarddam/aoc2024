@@ -23,10 +23,11 @@ pub fn input_generator(input: &str) -> Puzzle {
 
 #[aoc(day11, part1)]
 pub fn solve_part1(input: &Puzzle) -> usize {
+    let mut cache = HashMap::new();
     input
         .0
         .iter()
-        .map(|&stone| stone_count(stone, 25, &mut HashMap::new()) as usize)
+        .map(|&stone| stone_count(stone, 25, &mut cache) as usize)
         .sum()
 }
 
@@ -54,10 +55,11 @@ fn stone_count(stone: u64, blink_left: u64, cache: &mut HashMap<(u64, u64), u64>
 
 #[aoc(day11, part2)]
 pub fn solve_part2(input: &Puzzle) -> usize {
+    let mut cache = HashMap::new();
     input
         .0
         .iter()
-        .map(|&stone| stone_count(stone, 75, &mut HashMap::new()) as usize)
+        .map(|&stone| stone_count(stone, 75, &mut cache) as usize)
         .sum()
 }
 
