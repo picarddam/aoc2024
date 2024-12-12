@@ -7,7 +7,6 @@ use nom::character::complete::newline;
 use nom::combinator::map;
 use nom::multi::{many1, separated_list1};
 use nom::IResult;
-use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
 use utils::grid::Grid;
 use utils::movement::{Movement, CLOCKWISE, DOWN, LEFT, RIGHT, UP};
 use utils::position::Position;
@@ -85,34 +84,29 @@ fn get_visited(input: &Puzzle) -> Vec<(Position, Movement)> {
     visited
 }
 
-fn is_loop(grid: &Grid<Tile>, init: Position, block: Position) -> bool {
-    let mut curr_move = UP;
-    let mut curr_pos = init;
-    let mut visited: HashSet<(Position, Movement)> = HashSet::new();
-    if !grid.contains(block) || grid[&block] == Tile::Wall {
-        return false;
-    }
-    while !visited.contains(&(curr_pos, curr_move)) {
-        let try_pos = match curr_pos.checked_move(curr_move) {
-            Some(pos) => pos,
-            None => return false,
-        };
-        if !grid.contains(try_pos) {
-            return false;
-        }
-        if grid[&try_pos] == Tile::Wall || try_pos == block {
-            curr_move = rotate(curr_move);
-        } else {
-            visited.insert((curr_pos, curr_move));
-            curr_pos = try_pos;
-        }
-    }
-    true
-}
-
 #[aoc(day6, part2)]
 pub fn solve_part2(input: &Puzzle) -> u64 {
-    find_obstacles(input).len() as u64
+    let mut counter = 0;
+    let mut visited: HashSet<Position> = HashSet::new();
+    let mut curr_pos = input
+        .positions()
+        .filter(|&(_, t)| *t == Tile::Guard)
+        .map(|(p, _)| p)
+        .next()
+        .expect("Failed to find guard");
+    let mut curr_move = UP;
+    while let Some(pos) = input.checked_move(curr_pos, curr_move) {
+        visited.insert(curr_pos);
+        if input[&pos] == Tile::Wall {
+            curr_move = rotate(curr_move);
+        } else {
+            if !visited.contains(&pos) && is_loop(input, curr_pos, curr_move) {
+                counter += 1;
+            }
+            curr_pos = pos;
+        }
+    }
+    counter
 }
 
 fn rotate(m: Movement) -> Movement {
@@ -131,18 +125,34 @@ fn rotate(m: Movement) -> Movement {
     unreachable!()
 }
 
-fn find_obstacles(input: &Puzzle) -> HashSet<Position> {
-    let path = get_visited(input);
-    let init = path[0].0;
-    path.par_iter()
-        .filter(|&(p, m)| is_loop(input, init, *p + *m))
-        .map(|&(p, m)| p + m)
-        .filter(|p| *p != init)
-        .collect::<HashSet<_>>()
+fn is_loop(grid: &Grid<Tile>, init: Position, movement: Movement) -> bool {
+    let block = match grid
+        .checked_move(init, movement)
+        .filter(|p| grid[p] == Tile::Floor)
+    {
+        Some(pos) => pos,
+        None => return false,
+    };
+    let mut visited: HashSet<(Position, Movement)> = HashSet::new();
+    let mut curr_pos = init;
+    let mut curr_move = movement;
+    while let Some(pos) = grid.checked_move(curr_pos, curr_move) {
+        if pos == block || grid[&pos] == Tile::Wall {
+            if visited.contains(&(pos, curr_move)) {
+                return true;
+            }
+            visited.insert((pos, curr_move));
+            curr_move = rotate(curr_move);
+        } else {
+            curr_pos = pos;
+        }
+    }
+    false
 }
 
 #[cfg(test)]
 mod tests {
+
     use super::*;
     use test_case::test_case;
 
@@ -165,34 +175,5 @@ mod tests {
     #[test_case(TEST => 6)]
     fn part2(input: &str) -> u64 {
         solve_part2(&input_generator(input))
-    }
-
-    #[test_case(TEST, &[(6, 3), (7, 6), (7,7), (8,1), (8,3), (9,7)])]
-    fn check_obstacle(input: &str, obstacles: &[(usize, usize)]) {
-        let puzzle = input_generator(input);
-        let obstacle_set: HashSet<Position> =
-            obstacles.iter().map(|&(y, x)| Position { x, y }).collect();
-        assert_eq!(
-            find_obstacles(&puzzle)
-                .difference(&obstacle_set)
-                .copied()
-                .collect::<Vec<_>>(),
-            []
-        )
-    }
-
-    #[test]
-    fn check_not_starting() {
-        let input = include_str!("../input/2024/day6.txt");
-        let puzzle = input_generator(input);
-        let guard = puzzle
-            .positions()
-            .filter(|&(_, t)| *t == Tile::Guard)
-            .map(|(p, _)| p)
-            .next()
-            .expect("Failed to find guard");
-        let potentials = find_obstacles(&puzzle);
-        assert!(!potentials.contains(&guard));
-        assert_eq!(potentials.len(), 2022);
     }
 }
