@@ -100,7 +100,7 @@ pub fn solve_part1(input: &Puzzle) -> f64 {
     input
         .0
         .iter()
-        .filter_map(solve_machine)
+        .filter_map(|m| solve_machine(m, 0.))
         .map(|s| s.a * 3. + s.b)
         .sum()
 }
@@ -111,10 +111,18 @@ struct Solution {
     b: f64,
 }
 
-fn solve_machine(machine: &Machine) -> Option<Solution> {
+fn solve_machine(machine: &Machine, offset: f64) -> Option<Solution> {
     let mut buttons = array![
-        [machine.buttons.a.x, machine.buttons.b.x, machine.prize.x,],
-        [machine.buttons.a.y, machine.buttons.b.y, machine.prize.y,],
+        [
+            machine.buttons.a.x,
+            machine.buttons.b.x,
+            machine.prize.x + offset,
+        ],
+        [
+            machine.buttons.a.y,
+            machine.buttons.b.y,
+            machine.prize.y + offset,
+        ],
     ];
     if buttons[[0, 0]] == 0. {
         let mut row = buttons.row_mut(0);
@@ -136,8 +144,8 @@ fn solve_machine(machine: &Machine) -> Option<Solution> {
     }
     let a = buttons[[0, 2]].round();
     let b = buttons[[1, 2]].round();
-    if a * machine.buttons.a.x + b * machine.buttons.b.x == machine.prize.x
-        && a * machine.buttons.a.y + b * machine.buttons.b.y == machine.prize.y
+    if a * machine.buttons.a.x + b * machine.buttons.b.x == machine.prize.x + offset
+        && a * machine.buttons.a.y + b * machine.buttons.b.y == machine.prize.y + offset
     {
         Some(Solution { a, b })
     } else {
@@ -145,10 +153,15 @@ fn solve_machine(machine: &Machine) -> Option<Solution> {
     }
 }
 
-// #[aoc(day13, part2)]
-// pub fn solve_part2(input: &Puzzle) -> usize {
-//     todo!()
-// }
+#[aoc(day13, part2)]
+pub fn solve_part2(input: &Puzzle) -> f64 {
+    input
+        .0
+        .iter()
+        .filter_map(|m| solve_machine(m, 10000000000000.))
+        .map(|s| s.a * 3. + s.b)
+        .sum()
+}
 
 #[cfg(test)]
 mod tests {
@@ -182,7 +195,7 @@ Prize: X=18641, Y=10279";
     #[test_case(TEST, 3 => None)]
     fn part1_single(input: &str, idx: usize) -> Option<f64> {
         let puzzle = input_generator(input);
-        solve_machine(&puzzle.0[idx]).map(|s| s.a * 3. + s.b)
+        solve_machine(&puzzle.0[idx], 0.).map(|s| s.a * 3. + s.b)
     }
 
     // #[test_case(TEST => 80)]
