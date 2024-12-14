@@ -1,4 +1,4 @@
-use std::ops::Add;
+use std::collections::HashSet;
 
 use aoc_runner_derive::{aoc, aoc_generator};
 use nom::{
@@ -52,15 +52,9 @@ pub fn solve_part1(input: &Puzzle) -> usize {
     solve_part1_dim(input, 100, 101, 103)
 }
 
-pub fn solve_part1_dim(input: &Puzzle, seconds: u64, width: usize, height: usize) -> usize {
+pub fn solve_part1_dim(input: &Puzzle, seconds: usize, width: usize, height: usize) -> usize {
     let mut robots = input.0.clone();
-    let iwidth = width as isize;
-    let iheight = height as isize;
-    let isecs = seconds as isize;
-    for robot in &mut robots {
-        robot.0.x = (robot.0.x as isize + robot.1.x * isecs).rem_euclid(iwidth) as usize;
-        robot.0.y = (robot.0.y as isize + robot.1.y * isecs).rem_euclid(iheight) as usize;
-    }
+    move_bots(&mut robots, seconds, width, height);
     let q = check_quadrant(&robots, width, height);
     q.0 * q.1 * q.2 * q.3
 }
@@ -85,8 +79,33 @@ pub fn check_quadrant(robots: &[(Position, Movement)], width: usize, height: usi
 }
 
 #[aoc(day14, part2)]
-pub fn solve_part2(input: &Puzzle) -> u64 {
-    todo!("Use {input:?} to solve step 2.")
+pub fn solve_part2(input: &Puzzle) -> usize {
+    let mut robots = input.0.clone();
+    let mut bfr = HashSet::with_capacity(robots.len());
+    let mut seconds = 0;
+    while !check_xmas_tree(&robots, &mut bfr) {
+        seconds += 1;
+        move_bots(&mut robots, 1, 101, 103);
+    }
+    seconds
+}
+
+pub fn move_bots(robots: &mut [(Position, Movement)], steps: usize, width: usize, height: usize) {
+    let iwidth = width as isize;
+    let iheight = height as isize;
+    let isecs = steps as isize;
+    for robot in robots {
+        robot.0.x = (robot.0.x as isize + robot.1.x * isecs).rem_euclid(iwidth) as usize;
+        robot.0.y = (robot.0.y as isize + robot.1.y * isecs).rem_euclid(iheight) as usize;
+    }
+}
+
+// Puzzle was construted backward, robots were positionned to form a x-mas tree.
+// Robots were added to other unique locations then negative movement was applied
+pub fn check_xmas_tree(robots: &[(Position, Movement)], bfr: &mut HashSet<Position>) -> bool {
+    bfr.clear();
+    bfr.extend(robots.iter().map(|(p, _)| *p));
+    bfr.len() == robots.len()
 }
 
 #[cfg(test)]
